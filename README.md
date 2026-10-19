@@ -1,75 +1,183 @@
-# Boda · Julieta & Julio — Invitación web
+# Wedding Invitation & Interactive RSVP Platform 💍
 
-Web de invitación de boda de una sola página (scroll continuo con anclas), responsive
-mobile-first y con soporte bilingüe (Español / Inglés). Todo el contenido editable vive en 
-[`data/content.js`](data/content.js) (Español) y [`data/content_en.js`](data/content_en.js) (Inglés).
+[![Next.js](https://img.shields.io/badge/Next.js-14.2-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-18.3-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![Framer Motion](https://img.shields.io/badge/Framer_Motion-12.4-black?style=for-the-badge&logo=framer&logoColor=blue)](https://www.framer.com/motion/)
+[![Prisma](https://img.shields.io/badge/Prisma-5.22-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL_Neon-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://neon.tech/)
+[![Google Sheets API](https://img.shields.io/badge/Google_Sheets_API-v4-34A853?style=for-the-badge&logo=google-sheets&logoColor=white)](https://developers.google.com/sheets/api)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-black?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
 
-## Stack
+An editorial, mobile-first, bilingual (English & Spanish) wedding invitation and full-stack RSVP management system. Designed with luxury aesthetics, micro-interactions, and a dual-persistence architecture connecting a serverless PostgreSQL database with real-time Google Sheets synchronization.
 
-- **Next.js 14** (App Router) — un solo proyecto, sin backend separado.
-- **Tailwind CSS** con paleta custom (`bloque`, `fondo`, `texto`, `textoCalido`).
-- **react-hook-form + zod** para el RSVP.
-- **Prisma + PostgreSQL (Neon)** para persistir confirmaciones.
-- **Google Sheets API** para registrar los invitados (back-office).
-- **Nodemailer + Gmail SMTP** (App Password) para los emails al invitado.
-- Deploy 100% **Vercel**.
+---
 
-## Estructura
+### 🌐 Live Production Demo
+👉 **[View Live Web Application](https://julieta-y-julio-invitacion-boda.vercel.app)**
+
+---
+
+## 🌟 Architectural & Engineering Highlights
+
+- **Dual-Persistence Synchronization (PostgreSQL + Google Sheets)**:
+  - **Relational Integrity**: Saves and upserts guest confirmations into a serverless **Neon PostgreSQL** database through **Prisma ORM**, ensuring data integrity, idempotency per email, and schema migrations.
+  - **Non-Technical Event Coordinator Sync**: Concurrently streams RSVP submissions into a **Google Spreadsheet** in real time via the **Google Sheets API v4 (Service Account)**, providing wedding planners immediate live access to headcounts, bus seat reservations, and dietary restrictions without database queries.
+- **Automated Dual-Channel Notifications**:
+  - Direct transactional email confirmation sent to the guest via **Nodemailer** through Gmail SMTP on submission.
+  - Non-blocking design: Database persistence succeeds even in the event of third-party mail transport delays.
+- **Framer Motion Micro-Interactions**:
+  - Interactive submit button equipped with a fluid loading progress bar.
+  - Staggered scroll-reveal animations (`FadeIn`) across all sections and interactive countdown timer.
+- **Client-Side Internationalization (i18n)**:
+  - Real-time language switching (`ES` / `EN`) managed via React Context (`LanguageContext`), delivering zero-flicker transitions without unnecessary page reloads.
+- **Form Validation & Anti-Spam Security**:
+  - Validated with **react-hook-form** and strict runtime schema verification using **Zod**.
+  - **Honeypot protection (`_gotcha`)**: Traps automated spam bots silently while maintaining an unobtrusive experience for real guests (no annoying CAPTCHAs).
+  - Sensitive financial information (IBAN/BIC) hidden behind client-side state toggles rather than plain DOM markup.
+- **SEO & Privacy Controls**:
+  - Configured with strict `noindex, nofollow` headers to protect private event details, venue logistics, and personal registries from search engine scrapers.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology | Purpose |
+| --- | --- | --- |
+| **Framework** | Next.js 14 (App Router) | Single-repository full-stack architecture & optimized serverless API routes |
+| **Language & Runtime** | JavaScript (ESNext), Node.js (v18+) | Core application logic & API endpoints |
+| **Styling** | Tailwind CSS | Custom curated color system (`bloque`, `fondo`, `texto`, `textoCalido`) |
+| **Typography** | Google Fonts via `next/font` | Playfair Display, Cormorant Garamond, Jost, Bodoni Moda, Allura |
+| **Animations** | Framer Motion | Smooth transitions, countdown timer, and interactive progress states |
+| **Form & Validation** | React Hook Form + Zod | Type-safe form state handling and client/server validation |
+| **Database & ORM** | Prisma ORM + PostgreSQL (Neon) | Serverless-safe relational database with connection pooling |
+| **Third-Party APIs** | Google Sheets API v4 | Real-time back-office event coordinator synchronization |
+| **Email Transport** | Nodemailer (Gmail SMTP) | Instant transactional guest confirmation emails |
+| **Deployment** | Vercel | Global CDN edge caching and serverless execution |
+
+---
+
+## 📂 Project Architecture
 
 ```
-/app
-  /api/rsvp/route.js   route handler (Node runtime): valida, upsert, 2 emails
-  layout.jsx           fuentes (Playfair / Cormorant / Jost) + noindex
-  page.jsx             ensambla las 11 secciones
-  globals.css
-/components             un componente por sección + Franjas / ColumnaFranjas / Nav
-/context                LanguageContext.jsx (gestión de estado de idioma)
-/data                   content.js (ES) y content_en.js (EN) - ÚNICA fuente de contenido
-/lib/prisma.js          singleton de PrismaClient (serverless-safe)
-/prisma/schema.prisma
-tailwind.config.js
-.env.example
+boda-invitacion/
+├── app/
+│   ├── api/
+│   │   └── rsvp/
+│   │       └── route.js       # Node.js route handler: Zod validation, Prisma upsert, Sheets API, Nodemailer
+│   ├── globals.css            # Tailwind directives and custom animation styles
+│   ├── icon.svg               # SVG Favicon
+│   ├── layout.jsx             # Font optimization, metadata (noindex), LanguageProvider wrapper
+│   └── page.jsx               # Main landing page layout with smooth-scroll section assembly
+├── components/                # Modular UI components
+│   ├── Alojamiento.jsx        # Accommodation recommendations with direct links & contact
+│   ├── Bienvenida.jsx         # Welcome letter from the couple
+│   ├── ColumnaFranjas.jsx     # Editorial vertical strip decorations
+│   ├── ComoLlegar.jsx         # Church & reception venue details with Google Maps integration
+│   ├── Countdown.jsx          # Live countdown timer until wedding day
+│   ├── Cronograma.jsx         # Timeline of the day (itinerary icons)
+│   ├── FadeIn.jsx             # Framer Motion scroll-reveal container
+│   ├── FAQ.jsx                # Accordion for dress code, parking & FAQs
+│   ├── Footer.jsx             # Signature & closing remarks
+│   ├── FotoFechaLugar.jsx     # Photo gallery carousel & venue snapshot
+│   ├── Franjas.jsx            # Decorative geometric divider
+│   ├── GuiaSevilla.jsx        # City guide for traveling guests
+│   ├── Hero.jsx               # Full-bleed hero banner with names & countdown
+│   ├── Nav.jsx                # Sticky navigation bar with anchor links & language toggle
+│   ├── Regalo.jsx             # Gift registry info with revealable bank details
+│   ├── RSVPForm.jsx           # Multi-field RSVP form with progress bar animation
+│   └── Traslados.jsx          # Bus transfer schedule & pickup points
+├── context/
+│   └── LanguageContext.jsx    # React Context providing active language state (ES/EN)
+├── data/
+│   ├── content.js             # Single source of truth for Spanish content
+│   └── content_en.js          # Single source of truth for English content
+├── lib/
+│   └── prisma.js              # Serverless-safe PrismaClient singleton
+├── prisma/
+│   └── schema.prisma          # Database schema definition for RSVPs
+├── .env.example               # Safe environment variable template for local setup
+├── next.config.js             # Next.js build configuration
+├── package.json               # Dependencies and build scripts
+└── tailwind.config.js         # Tailwind theme configuration and custom font families
 ```
 
-## Desarrollo local
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- **Node.js** (v18.17.0 or higher)
+- **npm** (or yarn / pnpm)
+- A **PostgreSQL** instance (e.g., [Neon](https://neon.tech))
+
+### 1. Clone & Install Dependencies
 
 ```bash
+git clone https://github.com/HarrodPablo/wedding-rsvp-platform.git
+cd wedding-rsvp-platform
 npm install
-cp .env.example .env      # completá las variables
-npx prisma generate
-npx prisma migrate dev --name init   # crea la tabla en tu DB
-npm run dev                # http://localhost:3000
 ```
 
-> El `postinstall` corre `prisma generate` automáticamente.
+### 2. Configure Environment Variables
 
-## Variables de entorno (`.env`)
+Duplicate the template file and populate your credentials:
 
-| Variable | Descripción |
+```bash
+cp .env.example .env
+```
+
+| Variable | Description |
 | --- | --- |
-| `DATABASE_URL` | Connection string de Neon **con `-pooler`** (`&pgbouncer=true`). |
-| `GMAIL_USER` | Cuenta de Gmail con 2-Step Verification. |
-| `GMAIL_APP_PASSWORD` | App Password de `myaccount.google.com/apppasswords`. |
-| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Email de la Service Account creada en Google Cloud. |
-| `GOOGLE_PRIVATE_KEY` | Clave privada del JSON de la Service Account (con saltos de línea literales `\n`). |
-| `GOOGLE_SPREADSHEET_ID` | ID de la URL del documento de Google Sheets (donde se añaden los datos). |
+| `DATABASE_URL` | Neon PostgreSQL connection string with connection pooler (`-pooler` and `&pgbouncer=true`). |
+| `GMAIL_USER` | Gmail account with 2-Step Verification enabled. |
+| `GMAIL_APP_PASSWORD` | 16-character Google App Password from [Google Account Security](https://myaccount.google.com/apppasswords). |
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Google Cloud Service Account email. |
+| `GOOGLE_PRIVATE_KEY` | Service Account private RSA key (including `\n` linebreaks). |
+| `GOOGLE_SPREADSHEET_ID` | The ID found in your Google Sheets URL (ensure the Service Account has Editor access). |
 
-## Deploy en Vercel
+### 3. Initialize Database
 
-1. **Neon**: crear proyecto Postgres (free tier) y copiar la connection string **con `-pooler`**.
-2. **Gmail**: activar 2-Step Verification → generar App Password → usarlo como `GMAIL_APP_PASSWORD`.
-3. **Google Sheets**: crear un proyecto en Google Cloud, habilitar Google Sheets API, crear una Service Account, crearle una clave JSON, y **compartir el Spreadsheet** (como editor) con el email de la Service Account.
-4. **Vercel**: importar el repo (preset Next.js), cargar las 6 env vars.
-5. **Build command** (override en Vercel): 
-   ```
+Run Prisma migrations to set up the relational tables:
+
+```bash
+npx prisma generate
+npx prisma migrate dev --name init
+```
+
+### 4. Run Development Server
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
+
+---
+
+## 📦 Production Deployment (Vercel)
+
+1. **Database**: Create a project in [Neon](https://neon.tech), create the database, and copy the pooled connection string.
+2. **Environment Variables**: Add all 6 variables from `.env.example` in the **Vercel Project Settings > Environment Variables**.
+3. **Build Command**: Set the build command in Vercel to:
+   ```bash
    prisma generate && prisma migrate deploy && next build
    ```
-   Alternativa: correr `npx prisma migrate deploy` una vez a mano contra Neon antes del primer deploy.
+4. Deploy the repository.
 
-## Notas
+---
 
-- `noindex, nofollow` en el `<head>` — web privada.
-- Los datos bancarios NO están en el HTML inicial: se revelan con un botón (`useState`).
-- Honeypot `_gotcha` en el RSVP para bots simples.
-- Si falla el envío de email pero el guardado en DB fue OK, la API igual responde 200.
-- Las imágenes usan URLs de Unsplash de ejemplo — reemplazalas en `content.js`.
+## 👨‍💻 Author
+
+**Pablo Ezequiel Harrod**  
+Full-Stack Software Developer  
+
+- **LinkedIn**: [pablo-ezequiel-harrod](https://www.linkedin.com/in/pablo-ezequiel-harrod-b172423ab/)
+- **GitHub**: [@HarrodPablo](https://github.com/HarrodPablo)
+
+---
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
